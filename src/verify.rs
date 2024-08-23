@@ -16,6 +16,7 @@ pub fn verify<'a>(
 ) -> Result<(), &'a Exercise> {
     let (num_done, total) = progress;
     let bar = ProgressBar::new(total as u64);
+    let mut exercises_completed: i32 = 0;
     let mut percentage = num_done as f32 / total as f32 * 100.0;
     bar.set_style(
         ProgressStyle::default_bar()
@@ -26,10 +27,11 @@ pub fn verify<'a>(
     bar.set_position(num_done as u64);
     bar.set_message(format!("({:.1} %)", percentage));
 
+
     for exercise in exercises {
         let compile_result = match exercise.mode {
             Mode::Test => compile_and_test(exercise, RunMode::Interactive, verbose, success_hints),
-            Mode::Compile => compile_and_run_interactively(exercise, success_hints),
+            Mode::Compile => compile_and_run_interactively(exercise, success_hints, exercises_completed),
             Mode::Clippy => compile_only(exercise, success_hints),
         };
         if !compile_result.unwrap_or(false) {
@@ -37,6 +39,7 @@ pub fn verify<'a>(
         }
         percentage += 100.0 / total as f32;
         bar.inc(1);
+        exercises_completed+=1;
         bar.set_message(format!("({:.1} %)", percentage));
     }
     Ok(())
@@ -62,11 +65,11 @@ fn compile_only(exercise: &Exercise, success_hints: bool) -> Result<bool, ()> {
     let _ = compile(exercise, &progress_bar)?;
     progress_bar.finish_and_clear();
 
-    Ok(prompt_for_completion(exercise, None, success_hints))
+    Ok(prompt_for_completion(exercise, None, success_hints, None))
 }
 
 // Compile the given Exercise and run the resulting binary in an interactive mode
-fn compile_and_run_interactively(exercise: &Exercise, success_hints: bool) -> Result<bool, ()> {
+fn compile_and_run_interactively(exercise: &Exercise, success_hints: bool, num_done: i32) -> Result<bool, ()> {
     let progress_bar = ProgressBar::new_spinner();
     progress_bar.set_message(format!("Compiling {exercise}..."));
     progress_bar.enable_steady_tick(Duration::from_millis(100));
@@ -91,6 +94,7 @@ fn compile_and_run_interactively(exercise: &Exercise, success_hints: bool) -> Re
         exercise,
         Some(output.stdout),
         success_hints,
+        Some(num_done)
     ))
 }
 
@@ -116,7 +120,7 @@ fn compile_and_test(
                 println!("{}", output.stdout);
             }
             if let RunMode::Interactive = run_mode {
-                Ok(prompt_for_completion(exercise, None, success_hints))
+                Ok(prompt_for_completion(exercise, None, success_hints, None))
             } else {
                 Ok(true)
             }
@@ -158,6 +162,7 @@ fn prompt_for_completion(
     exercise: &Exercise,
     prompt_output: Option<String>,
     success_hints: bool,
+    num_done: Option<i32>
 ) -> bool {
     let context = match exercise.state() {
         State::Done => return true,
@@ -191,6 +196,9 @@ fn prompt_for_completion(
     println!();
 
     if let Some(output) = prompt_output {
+        if num_done != None {
+        println!("Exercise: \n  file:   {}\n  number: {}\n", style(exercise).green(), num_done.unwrap_or(1).to_string());
+        }
         println!("Output:");
         println!("{}", separator());
         println!("{output}");

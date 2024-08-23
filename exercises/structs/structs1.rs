@@ -5,7 +5,6 @@
 // Execute `rustlings hint structs1` or use the `hint` watch subcommand for a
 // hint.
 
-// I AM NOT DONE
 
 struct ColorClassicStruct {
     // TODO: Something goes here
@@ -23,7 +22,17 @@ mod tests {
     #[test]
     fn classic_c_structs() {
         // TODO: Instantiate a classic c struct!
-        // let green =
+        struct Color {
+            red: i32,
+            green: i32,
+            blue: i32
+        }
+
+        let green = Color {
+            red: 0,
+            green: 255,
+            blue: 0
+        };
 
         assert_eq!(green.red, 0);
         assert_eq!(green.green, 255);
@@ -33,18 +42,31 @@ mod tests {
     #[test]
     fn tuple_structs() {
         // TODO: Instantiate a tuple struct!
-        // let green =
+        let green: (i32, i32, i32) = (0, 255, 0);
 
         assert_eq!(green.0, 0);
         assert_eq!(green.1, 255);
         assert_eq!(green.2, 0);
     }
 
+
+    // Added by @moekhalil to differentiate between anon and named struct
+    #[test]
+    fn named_tuple_structs() {
+
+        struct TColor (i32, i32, i32);
+        let green_three = TColor (0, 255, 0);
+
+        assert_eq!(green_three.0, 0);
+        assert_eq!(green_three.1, 255);
+        assert_eq!(green_three.2, 0);
+    }
+
     #[test]
     fn unit_structs() {
         // TODO: Instantiate a unit-like struct!
-        // let unit_like_struct =
-        let message = format!("{:?}s are fun!", unit_like_struct);
+        let unit_like_struct = UnitLikeStruct {};
+        let message = format!("{:?}s are fun!", UnitLikeStruct);
 
         assert_eq!(message, "UnitLikeStructs are fun!");
     }
